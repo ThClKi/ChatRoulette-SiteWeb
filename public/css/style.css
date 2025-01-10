@@ -1,0 +1,230 @@
+:root {
+    --primary: #6B46C1;
+    --primary-dark: #553C9A;
+    --primary-light: #9F7AEA;
+    --bg-gradient: linear-gradient(135deg, #553C9A 0%, #6B46C1 100%);
+    --text-dark: #2D3748;
+    --text-light: #A0AEC0;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    line-height: 1.6;
+    color: var(--text-dark);
+}
+
+.bg-gradient {
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 20px;
+    margin: 0 auto;
+}
+
+/* Header styles */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.welcome-message {
+    color: white;
+    font-size: 1.1rem;
+}
+
+/* Auth Card styles */
+.auth-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--primary-dark);
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.error-message {
+    color: #E53E3E;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+/* Chat Rooms styles */
+.chat-rooms {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+}
+
+.rooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.room-card {
+    background: #F7FAFC;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 2px solid #E2E8F0;
+    transition: all 0.2s;
+}
+
+.room-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.room-card h3 {
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Chat styles */
+.chat-container {
+    background: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background: var(--primary);
+    color: white;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+    background: #F7FAFC;
+}
+
+.message {
+    background: white;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.message.system {
+    background: #EDF2F7;
+    color: var(--text-light);
+    text-align: center;
+    font-style: italic;
+}
+
+.message strong {
+    color: var(--primary-dark);
+    margin-right: 0.5rem;
+}
+
+.message-time {
+    float: right;
+    color: var(--text-light);
+    font-size: 0.75rem;
+}
+
+.chat-input {
+    padding: 1rem;
+    background: white;
+    display: flex;
+    gap: 1rem;
+    border-top: 1px solid #E2E8F0;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 6px;
+    transition: border-color 0.2s;
+}
+
+.chat-input input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+/* Button styles */
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secondary {
+    background: #E2E8F0;
+    color: var(--text-dark);
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 6px;
+}
