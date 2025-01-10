@@ -3,9 +3,11 @@ const cors = require('cors');
 const axios = require('axios');
 const app = express();
 
-const BOT_TOKEN = 'none';
-const CHANNEL_ID = 'none';
-const ADMIN_ROLE_ID = 'none';
+require('dotenv').config()
+
+const BOT_TOKEN = process.env.BOT_TOKEN;
+const CHANNEL_ID = process.env.CHANNEL_ID;
+const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
 
 app.use(cors());
 app.use(express.json());
