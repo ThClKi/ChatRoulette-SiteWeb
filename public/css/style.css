@@ -228,3 +228,6 @@ body {
     border: none;
     border-radius: 6px;
 }
+.btn-secondary{
+ background : #E2E8F0; 
+}
