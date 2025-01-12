@@ -72,15 +72,21 @@ app.post('/api/send-message', async (req, res) => {
     }
 });
 
-// Get messages
+// Get message
 app.get('/api/messages', async (req, res) => {
-    const { channel_id } = req.query; 
+    const { channel_id, timestamp } = req.query;
 
     if (!channel_id) {
         return res.status(400).json({ error: 'channel_id is required' });
     }
 
+    if (!timestamp) {
+        return res.status(400).json({ error: 'timestamp is required' });
+    }
+
     try {
+        const sinceTimestamp = new Date(timestamp).getTime() / 1000;
+
         const messagesResponse = await axios.get(
             `https://discord.com/api/v9/channels/${channel_id}/messages?limit=50`,
             {
@@ -101,32 +107,36 @@ app.get('/api/messages', async (req, res) => {
                 content: msg.content
             });
 
-            if (msg.content.includes(':')) {
-                const colonIndex = msg.content.indexOf(':');
-                messages.push({
-                    id: msg.id,
-                    username: msg.content.substring(0, colonIndex).trim(),
-                    content: msg.content.substring(colonIndex + 1).trim(),
-                    timestamp: msg.timestamp,
-                    isAdmin: false
-                });
-            } else if (msg.author && !msg.author.bot) {
-                let roles = msg.member?.roles;
-                if (!roles && msg.guild_id) {
-                    roles = await getMemberRoles(msg.guild_id, msg.author.id);
-                }
+            const messageTimestamp = new Date(msg.timestamp).getTime() / 1000;
+            if (messageTimestamp >= sinceTimestamp) {
 
-                console.log('User roles:', roles);
-
-                const isAdmin = roles?.includes(ADMIN_ROLE_ID);
-                if (isAdmin) {
+                if (msg.content.includes(':')) {
+                    const colonIndex = msg.content.indexOf(':');
                     messages.push({
                         id: msg.id,
-                        username: 'Admin',
-                        content: msg.content,
+                        username: msg.content.substring(0, colonIndex).trim(),
+                        content: msg.content.substring(colonIndex + 1).trim(),
                         timestamp: msg.timestamp,
-                        isAdmin: true
+                        isAdmin: false
                     });
+                } else if (msg.author && !msg.author.bot) {
+                    let roles = msg.member?.roles;
+                    if (!roles && msg.guild_id) {
+                        roles = await getMemberRoles(msg.guild_id, msg.author.id);
+                    }
+
+                    console.log('User roles:', roles);
+
+                    const isAdmin = roles?.includes(ADMIN_ROLE_ID);
+                    if (isAdmin) {
+                        messages.push({
+                            id: msg.id,
+                            username: 'Admin',
+                            content: msg.content,
+                            timestamp: msg.timestamp,
+                            isAdmin: true
+                        });
+                    }
                 }
             }
         }
@@ -137,6 +147,7 @@ app.get('/api/messages', async (req, res) => {
         res.status(500).json({ error: 'Failed to get messages' });
     }
 });
+
 
 // Get channels
 app.get('/api/get-channels', async (req, res) => {
