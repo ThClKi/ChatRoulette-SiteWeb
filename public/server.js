@@ -6,12 +6,33 @@ const app = express();
 require('dotenv').config()
 
 const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHANNEL_ID = process.env.CHANNEL_ID;
+const GUILD_ID = process.env.GUILD_ID;
 const ADMIN_ROLE_ID = process.env.ADMIN_ROLE_ID;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+
+
+// Функция для получения информации о пользователе
+async function getMemberRoles(guildId, userId) {
+    try {
+        const response = await axios.get(
+            `https://discord.com/api/v9/guilds/${guildId}/members/${userId}`,
+            {
+                headers: {
+                    Authorization: `Bot ${BOT_TOKEN}`
+                }
+            }
+        );
+        console.log('Member data:', response.data);
+        return response.data.roles || [];
+    } catch (error) {
+        console.error('Error getting member roles:', error.response?.data || error.message);
+        return [];
+    }
+}
+
 
 // Send messages
 app.post('/api/send-message', async (req, res) => {
@@ -51,31 +72,17 @@ app.post('/api/send-message', async (req, res) => {
     }
 });
 
-// Функция для получения информации о пользователе
-async function getMemberRoles(guildId, userId) {
-    try {
-        const response = await axios.get(
-            `https://discord.com/api/v9/guilds/${guildId}/members/${userId}`,
-            {
-                headers: {
-                    Authorization: `Bot ${BOT_TOKEN}`
-                }
-            }
-        );
-        console.log('Member data:', response.data);
-        return response.data.roles || [];
-    } catch (error) {
-        console.error('Error getting member roles:', error.response?.data || error.message);
-        return [];
-    }
-}
-
 // Get messages
 app.get('/api/messages', async (req, res) => {
+    const { channel_id } = req.query; 
+
+    if (!channel_id) {
+        return res.status(400).json({ error: 'channel_id is required' });
+    }
+
     try {
-        // Get messages from the channel
         const messagesResponse = await axios.get(
-            `https://discord.com/api/v9/channels/${CHANNEL_ID}/messages?limit=50`,
+            `https://discord.com/api/v9/channels/${channel_id}/messages?limit=50`,
             {
                 headers: {
                     Authorization: `Bot ${BOT_TOKEN}`
@@ -85,10 +92,8 @@ app.get('/api/messages', async (req, res) => {
 
         console.log('First message data:', messagesResponse.data[0]);
 
-        // Process messages
         const messages = [];
         for (const msg of messagesResponse.data) {
-            // Debug log
             console.log('Processing message:', {
                 id: msg.id,
                 author: msg.author,
@@ -97,7 +102,6 @@ app.get('/api/messages', async (req, res) => {
             });
 
             if (msg.content.includes(':')) {
-                // Message from our web interface
                 const colonIndex = msg.content.indexOf(':');
                 messages.push({
                     id: msg.id,
@@ -107,13 +111,11 @@ app.get('/api/messages', async (req, res) => {
                     isAdmin: false
                 });
             } else if (msg.author && !msg.author.bot) {
-                // Get user's roles if the member object is not included
                 let roles = msg.member?.roles;
                 if (!roles && msg.guild_id) {
                     roles = await getMemberRoles(msg.guild_id, msg.author.id);
                 }
 
-                // Debug log
                 console.log('User roles:', roles);
 
                 const isAdmin = roles?.includes(ADMIN_ROLE_ID);
@@ -129,13 +131,83 @@ app.get('/api/messages', async (req, res) => {
             }
         }
 
-        // Send reverse chronological order
         res.json(messages.reverse());
     } catch (error) {
         console.error('Error getting messages:', error.response?.data || error.message);
         res.status(500).json({ error: 'Failed to get messages' });
     }
 });
+
+// Get channels
+app.get('/api/get-channels', async (req, res) => {
+    try {
+        const channelsResponse = await axios.get(
+            `https://discord.com/api/v9/guilds/${GUILD_ID}/channels`,
+            {
+                headers: {
+                    Authorization: `Bot ${BOT_TOKEN}`
+                }
+            }
+        );
+
+        const categoryChannels = channelsResponse.data.filter(channel => channel.parent_id === '1327978962642538627');
+
+        const result = categoryChannels.map(channel => ({
+            id: channel.id,
+            name: channel.name
+        }));
+
+        res.json(result);
+    } catch (error) {
+        console.error('Error :', error.response?.data || error.message);
+        res.status(500).json({ error: 'Failed' });
+    }
+});
+
+// Create a new channel
+app.post('/api/create-channel', async (req, res) => {
+    const { channel_name, channel_creator } = req.body;
+
+    if (!channel_name || !channel_creator) {
+        return res.status(400).json({ error: 'Channel name and creator are required.' });
+    }
+
+    try {
+        const response = await axios.post(
+            `https://discord.com/api/v9/guilds/${GUILD_ID}/channels`,
+            {
+                name: channel_name,
+                parent_id: '1327978962642538627',
+                type: 0,
+                topic: `Created by ${channel_creator}`,
+            },
+            {
+                headers: {
+                    Authorization: `Bot ${BOT_TOKEN}`,
+                    'Content-Type': 'application/json',
+                }
+            }
+        );
+
+        res.status(201).json({
+            success: true,
+            message: 'Channel created successfully',
+            channel: {
+                id: response.data.id,
+                name: response.data.name,
+                topic: response.data.topic,
+            },
+        });
+    } catch (error) {
+        console.error('Error creating channel:', error.response?.data || error.message);
+        res.status(500).json({ 
+            error: 'Failed to create channel', 
+            details: error.response?.data || error.message 
+        });
+    }
+});
+
+
 
 const PORT = 3000;
 app.listen(PORT, () => {
