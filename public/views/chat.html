@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Chatroulette Textuelle</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gradient">
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="header-left">
+                <button id="back-button" class="btn-back">←</button>
+                <h2 id="room-name">Room Name</h2>
+            </div>
+            <div class="header-right">
+                <span id="users-count">Users: 0/10</span>
+                <span id="user-nickname"></span>
+            </div>
+        </div>
+        <div class="chat-messages" id="messages">
+            <!-- Messages will be added dynamically -->
+        </div>
+        <form id="message-form" class="chat-input">
+            <input type="text" id="message" placeholder="Type your message...">
+            <button type="submit" class="btn-send">Send</button>
+        </form>
+    </div>
+    <script>
+        // Check if user is logged in
+        const nickname = localStorage.getItem('nickname');
+        const roomId = localStorage.getItem('currentRoom');
+        if (!nickname || !roomId) {
+            window.location.href = 'index.html';
+        }
+
+        // Display user info
+        document.getElementById('user-nickname').textContent = nickname;
+        document.getElementById('room-name').textContent = `Chat Room ${roomId}`;
+
+        // Demo messages
+        const demoMessages = [
+            { nickname: 'System', content: 'Welcome to the chat!', type: 'system' },
+            { nickname: 'Alice', content: 'Hi everyone!', type: 'message' },
+            { nickname: 'Bob', content: 'Hello!', type: 'message' }
+        ];
+
+        const messagesContainer = document.getElementById('messages');
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message');
+
+        // Display messages
+        function displayMessages() {
+            messagesContainer.innerHTML = '';
+            demoMessages.forEach(msg => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${msg.type}`;
+                
+                if (msg.type === 'system') {
+                    messageElement.textContent = msg.content;
+                } else {
+                    messageElement.innerHTML = `
+                        <strong>${msg.nickname}:</strong>
+                        <span>${msg.content}</span>
+                        <small class="message-time">${new Date().toLocaleTimeString()}</small>
+                    `;
+                }
+                
+                messagesContainer.appendChild(messageElement);
+            });
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Send message
+        messageForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            
+            if (content) {
+                demoMessages.push({
+                    nickname: nickname,
+                    content: content,
+                    type: 'message'
+                });
+                messageInput.value = '';
+                displayMessages();
+            }
+        });
+
+        // Back button
+        document.getElementById('back-button').addEventListener('click', () => {
+            localStorage.removeItem('currentRoom');
+            window.location.href = 'chatrooms.html';
+        });
+
+        // Initial display
+        displayMessages();
+    </script>
+</body>
+</html>

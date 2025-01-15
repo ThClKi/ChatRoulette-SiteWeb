@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration - Chatroulette Textuelle</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gradient">
+    <div class="container">
+        <div class="auth-card">
+            <h1>Welcome</h1>
+            <form id="registration-form">
+                <div class="form-group">
+                    <label for="nickname">Choose your nickname</label>
+                    <input type="text" id="nickname" name="nickname" required 
+                           placeholder="Enter your nickname" minlength="3" maxlength="15">
+                </div>
+                <div id="error-message" class="error-message"></div>
+                <button type="submit" class="btn-primary">Continue</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById('registration-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nickname = document.getElementById('nickname').value.trim();
+            const errorMessage = document.getElementById('error-message');
+            
+            if (nickname.length < 3) {
+                errorMessage.textContent = 'Nickname must be at least 3 characters long';
+                return;
+            }
+            
+            localStorage.setItem('nickname', nickname);
+            window.location.href = 'chatrooms.html';
+        });
+    </script>
+</body>
+</html>

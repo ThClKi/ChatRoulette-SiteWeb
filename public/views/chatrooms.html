@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Rooms - Chatroulette Textuelle</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="bg-gradient">
+    <div class="container">
+        <div class="chat-rooms">
+            <div class="header-container">
+                <h1>Chat Rooms</h1>
+                <span class="welcome-message">Welcome, <span id="user-nickname"></span>!</span>
+            </div>
+            <div class="rooms-grid" id="rooms-list">
+                <!-- Rooms will be added dynamically -->
+            </div>
+            <div class="actions">
+                <button id="create-room" class="btn-primary">Create New Room</button>
+                <button id="logout" class="btn-secondary">Logout</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Check if user is logged in
+        const nickname = localStorage.getItem('nickname');
+        if (!nickname) {
+            window.location.href = 'index.html';
+        }
+
+        // Display nickname
+        document.getElementById('user-nickname').textContent = nickname;
+
+        // Load demo rooms
+        const demoRooms = [
+            { id: 1, name: 'General Chat', users: 5, maxUsers: 10 },
+            { id: 2, name: 'Gaming', users: 3, maxUsers: 8 },
+            { id: 3, name: 'Music', users: 2, maxUsers: 6 }
+        ];
+
+        const roomsList = document.getElementById('rooms-list');
+        
+        function displayRooms() {
+            roomsList.innerHTML = '';
+            demoRooms.forEach(room => {
+                const roomCard = document.createElement('div');
+                roomCard.className = 'room-card';
+                roomCard.innerHTML = `
+                    <h3>${room.name}</h3>
+                    <p>Users: ${room.users}/${room.maxUsers}</p>
+                    <button onclick="joinRoom(${room.id})" class="btn-join">Join Room</button>
+                `;
+                roomsList.appendChild(roomCard);
+            });
+        }
+
+        function joinRoom(roomId) {
+            localStorage.setItem('currentRoom', roomId);
+            window.location.href = 'chat.html';
+        }
+
+        // Create new room
+        document.getElementById('create-room').addEventListener('click', () => {
+            const roomName = prompt('Enter room name:');
+            if (roomName) {
+                const newRoom = {
+                    id: demoRooms.length + 1,
+                    name: roomName,
+                    users: 0,
+                    maxUsers: 10
+                };
+                demoRooms.push(newRoom);
+                displayRooms();
+            }
+        });
+
+        // Logout
+        document.getElementById('logout').addEventListener('click', () => {
+            localStorage.removeItem('nickname');
+            window.location.href = 'index.html';
+        });
+
+        // Initial display
+        displayRooms();
+    </script>
+</body>
+</html>

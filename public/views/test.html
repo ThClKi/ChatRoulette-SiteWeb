@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Chat Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .chat-box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            height: 400px;
+            overflow-y: auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .message.admin-message {
+            background: #ffe3e3;
+        }
+        .message .username.admin {
+            color: #ff4444;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message .username {
+            font-weight: bold;
+            color: #7289da;
+            margin-bottom: 4px;
+        }
+        .message .content {
+            color: #2f3136;
+            word-wrap: break-word;
+        }
+        .message .timestamp {
+            font-size: 0.8em;
+            color: #99aab5;
+            float: right;
+        }
+        .input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus {
+            border-color: #7289da;
+            outline: none;
+        }
+        button {
+            padding: 12px 24px;
+            background: #7289da;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background: #5b6eae;
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        .status {
+            text-align: center;
+            color: #99aab5;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Discord Chat</h1>
+    <div class="chat-box" id="messages"></div>
+    <div class="input-container">
+        <input type="text" id="username" placeholder="Your username" autocomplete="off">
+        <input type="text" id="message" placeholder="Type a message..." autocomplete="off">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+    <button onclick="loadMessages()">Refresh Messages</button>
+    <div id="status" class="status"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        async function sendMessage() {
+            const username = document.getElementById('username').value;
+            const message = document.getElementById('message').value;
+            const statusDiv = document.getElementById('status');
+
+            if (!username || !message) {
+                setStatus('Please enter both username and message', 'error');
+                return;
+            }
+
+            try {
+                setStatus('Sending message...');
+                const response = await fetch(`${API_URL}/send-message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, message })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('message').value = '';
+                    setStatus('Message sent successfully!');
+                    await loadMessages();
+                } else {
+                    setStatus('Error sending message: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                setStatus('Failed to send message', 'error');
+            }
+        }
+
+        async function loadMessages() {
+            try {
+                setStatus('Loading messages...');
+                const response = await fetch(`${API_URL}/messages`);
+                const messages = await response.json();
+                
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = '';
+                
+                // Messages are already reversed from the server
+                messages.forEach(msg => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${!msg.isBot ? 'discord-message' : ''}`;
+                    
+                    const timestamp = new Date(msg.timestamp).toLocaleTimeString();
+                    
+                    messageDiv.innerHTML = `
+                        <div class="username">${escapeHtml(msg.username)}</div>
+                        <div class="content">${escapeHtml(msg.content)}</div>
+                        <div class="timestamp">${timestamp}</div>
+                    `;
+                    
+                    messagesDiv.appendChild(messageDiv);
+                });
+                
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                setStatus('Messages loaded successfully!');
+            } catch (error) {
+                console.error('Error loading messages:', error);
+                setStatus('Failed to load messages', 'error');
+            }
+        }
+
+        function setStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.style.color = type === 'error' ? '#ff4444' : '#99aab5';
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Load messages on page load
+        loadMessages();
+
+        // Add enter key support for sending messages
+        document.getElementById('message').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Save username in localStorage
+        const savedUsername = localStorage.getItem('username');
+        if (savedUsername) {
+            document.getElementById('username').value = savedUsername;
+        }
+
+        document.getElementById('username').addEventListener('change', (e) => {
+            localStorage.setItem('username', e.target.value);
+        });
+
+        // Auto-refresh messages every 5 seconds
+        setInterval(loadMessages, 5000);
+    </script>
+</body>
+</html>
